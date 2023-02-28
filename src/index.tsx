@@ -5,6 +5,8 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import CustomerPage from './pages/CustomerPage';
+import EventPage from './pages/EventPage';
+import ActorPage from './pages/ActorPage';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -14,7 +16,10 @@ root.render(
     <BrowserRouter>
 			<Routes>
 				<Route path="/" element={<App />}>
+					<Route path="/customer/:customerId" element={<CustomerPage />} />
 					<Route path="/customer" element={<CustomerPage />} />
+					<Route path="/event" element={<EventPage />} />
+					<Route path="/actor" element={<ActorPage />} />
 				</Route>
 			</Routes>
 		</BrowserRouter>

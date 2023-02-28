@@ -1,16 +1,12 @@
 import { EventType } from "@testing-library/react";
 import { ActorType } from "./ActorTypeEnum";
-
-interface IEventParameter {
-    parameterName: string,
-    parameterValue: any
-}
+import { IEventParameter } from "./IEventParameter";
 
 export interface IEventByCustomer {
-  customerId: number,
-  accountId: number,
-  actor: ActorType | string,
+  customerId: string,
+  accountId: string,
+  actorType: ActorType | string,
   eventType: EventType,
-  eventParameters: IEventParameter[],
-  eventTimestamp: Date,
+  parameters: IEventParameter[],
+  timestamp: string,
 }

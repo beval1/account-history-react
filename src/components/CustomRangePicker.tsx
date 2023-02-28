@@ -2,7 +2,10 @@ import { Box, Typography } from "@mui/material";
 import React from "react";
 import CustomDatePicker from "./CustomDatePicker";
 
-type Props = {};
+type Props = {
+  onStartDateChange: React.Dispatch<React.SetStateAction<Date | null>>
+  onEndDateChange: React.Dispatch<React.SetStateAction<Date | null>>
+};
 
 function CustomRangePicker(props: Props) {
   return (
@@ -13,11 +16,11 @@ function CustomRangePicker(props: Props) {
       alignItems="center"
       color="grey"
     >
-      <CustomDatePicker label="startDate"/>
+      <CustomDatePicker label="startDate" onChange={props.onStartDateChange}/>
       <Typography component="p" fontSize="24px">
         —
       </Typography>
-      <CustomDatePicker label="endDate"/>
+      <CustomDatePicker label="endDate" onChange={props.onEndDateChange}/>
     </Box>
   );
 }
