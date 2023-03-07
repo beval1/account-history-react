@@ -4,6 +4,8 @@ import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 import { Paper, Typography } from "@mui/material";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useContext } from "react";
+import { NavigationMenuContext } from "../App";
 
 interface LinkTabProps {
     label?: string;
@@ -26,16 +28,13 @@ function LinkTab(props: LinkTabProps) {
 }
 
 function NavigationMenu() {
-    const [value, setValue] = React.useState(0);
+    // const [value, setValue] = React.useState(0);
     const navigate = useNavigate();
-    // const location = useLocation();
-    // if (location.pathname.includes("/customer")){
-    //     setValue(0)
-    // }
+    const menuContext = useContext(NavigationMenuContext);
 
     const handleChange = (event: React.SyntheticEvent, newValue: number) => {
-        setValue(newValue);
-        console.log(newValue)
+        menuContext.setTab(newValue);
+        // console.log(newValue)
         switch(newValue){
             case 0: 
                 navigate("/customer");
@@ -58,7 +57,7 @@ function NavigationMenu() {
             <Paper sx={{ width: "100%", alignContent: "center", display: "flex", alignItems: "center"}}>
                 {/* <Typography component="p" margin="0 20px" fontSize="18px">Filter By</Typography> */}
                 <Tabs
-                    value={value}
+                    value={menuContext.tab}
                     onChange={handleChange}
                     aria-label="navigation menu"
                     textColor="secondary"

@@ -8,7 +8,7 @@ import CustomRangePicker from '../components/CustomRangePicker'
 import EventByActorTable from '../components/EventByActorTable'
 import SearchButton from '../components/SearchButton'
 import StyledTextField from '../components/StyledTextField'
-import { handleInputChange } from '../utility'
+import { convertUTCDateToLocalDate, handleInputChange } from '../utility'
 
 type Props = {}
 
@@ -19,7 +19,7 @@ type formProps = {
 
 function ActorPage(props: Props) {
   const [form, setForm] = useState<formProps>({} as formProps);
-  const [rows, setRows] = useState<IEventByActor[]>([]);
+  const [data, setData] = useState<IEventByActor|null>(null);
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
@@ -27,20 +27,20 @@ function ActorPage(props: Props) {
 
   const handleSearch = async () => {
     setLoading(true)
-    const startDateStr = startDate?.toISOString().split("T")[0];
-    const endDateStr = endDate?.toISOString().split("T")[0];
+    const startDateStr = convertUTCDateToLocalDate(startDate)?.toISOString().split("T")[0];
+    const endDateStr = convertUTCDateToLocalDate(endDate)?.toISOString().split("T")[0];
     let params: ParametersByActor = {
         eventType: form.eventType,
         startDate: startDateStr,
         endDate: endDateStr,
     };
 
-    const page: IPage<IEventByActor> = await getEventsByActor(
+    const events: IEventByActor = await getEventsByActor(
         form.actor,
         params
     );
-    console.log(page);
-    setRows(page.content);
+    console.log(events);
+    setData(events);
     setLoading(false)
 };
 
@@ -69,7 +69,7 @@ function ActorPage(props: Props) {
                     <SearchButton onClick={handleSearch} />
                 </Box>
                 <Divider variant="middle" />
-                <EventByActorTable rows={rows}></EventByActorTable>
+                <EventByActorTable data={data}></EventByActorTable>
                 <CircularProgress
                     size="sm"
                     sx={{

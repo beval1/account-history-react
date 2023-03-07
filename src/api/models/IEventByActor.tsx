@@ -1,8 +1,10 @@
-import { EventType } from "@testing-library/react"
+import { EventType } from "./EventTypeEnum"
 
-export default interface IEventByActor {
-    actorType: string
+export type IEventCount = {
     eventType: EventType,
-    customerId: string
-    timestamp: string,
+    count: number,
+}
+export default interface IEventByActor {
+    actor: string
+    countPerEvent: IEventCount[],
 }

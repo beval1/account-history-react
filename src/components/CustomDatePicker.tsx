@@ -10,7 +10,6 @@ type Props = {
 };
 
 function CustomDatePicker(props: Props) {
-
     const [value, setValue] = useState<Date|null>(null)
     // console.log(value)
     return (

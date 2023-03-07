@@ -13,7 +13,7 @@ import Paper from "@mui/material/Paper";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import { IEventByCustomer } from "../api/models/IEventByCustomer";
-import { Button, TableFooter } from "@mui/material";
+import { Button, Divider, TableFooter } from "@mui/material";
 import { IPage } from "../api/models/IPage";
 
 function Row(props: { row: IEventByCustomer }) {
@@ -41,7 +41,7 @@ function Row(props: { row: IEventByCustomer }) {
                 </TableCell>
                 <TableCell align="right">{row.accountId}</TableCell>
                 <TableCell align="right">{row.eventType}</TableCell>
-                <TableCell align="right">{row.actorType}</TableCell>
+                <TableCell align="right">{row.actor}</TableCell>
                 <TableCell align="right">{row.timestamp}</TableCell>
             </TableRow>
             <TableRow>
@@ -96,9 +96,9 @@ function Row(props: { row: IEventByCustomer }) {
 }
 
 type Props = {
-    // rows: IEventByCustomer[];
     pages: IPage<IEventByCustomer>[];
     pageNumber: number;
+    pageCount: number;
     onNext: React.MouseEventHandler<HTMLButtonElement> | undefined;
     onPrev: React.MouseEventHandler<HTMLButtonElement> | undefined;
 };
@@ -138,6 +138,7 @@ export default function EventByCustomerTable(props: Props) {
                           )
                         : null}
                 </TableBody>
+                {props.pageNumber == 0 ? null :
                 <TableFooter>
                     <TableRow>
                         <TableCell></TableCell>
@@ -146,26 +147,40 @@ export default function EventByCustomerTable(props: Props) {
                         <TableCell></TableCell>
                         <TableCell></TableCell>
                         <TableCell align="right">
-                            <Box >
+                            <Box display="flex" alignItems="center" justifyContent="right" gap="10px">
+                                <Typography
+                                    component="p"
+                                    fontSize="18px"
+                                    display="inline-block"
+                                >
+                                    Total pages: {props.pageCount}
+                                </Typography>
+                                <Divider orientation="vertical" sx={{color: "black"}} flexItem />
                                 <Button
                                     color="secondary"
                                     onClick={props.onPrev}
+                                    disabled={props.pageNumber == 1}
                                 >
                                     Prev
                                 </Button>
-                                <Typography component="p" fontSize="18px" display="inline-block">
+                                <Typography
+                                    component="p"
+                                    fontSize="18px"
+                                    display="inline-block"
+                                >
                                     {props.pageNumber}
                                 </Typography>
                                 <Button
                                     color="secondary"
                                     onClick={props.onNext}
+                                    disabled={props.pages[props.pages.length-1].pageSize < 10 || props.pageNumber >= props.pageCount}
                                 >
                                     Next
                                 </Button>
                             </Box>
                         </TableCell>
                     </TableRow>
-                </TableFooter>
+                </TableFooter>}
             </Table>
         </TableContainer>
     );

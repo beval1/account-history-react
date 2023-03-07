@@ -1,9 +1,10 @@
 import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material'
 import React from 'react'
+import { EventType } from '../api/models/EventTypeEnum'
 import IEventByActor from '../api/models/IEventByActor'
 
 type Props = {
-    rows: IEventByActor[]
+    data: IEventByActor | null
 }
 
 function EventByActorTable(props: Props) {
@@ -14,22 +15,22 @@ function EventByActorTable(props: Props) {
               <TableRow sx={(theme) => ({ backgroundColor: theme.palette.secondary.main })}>
                 <TableCell sx={{color: "white"}}>Actor</TableCell>
                 <TableCell sx={{color: "white"}} align="right">Event Type</TableCell>
-                <TableCell sx={{color: "white"}} align="right">Timestamp</TableCell>
+                <TableCell sx={{color: "white"}} align="right">Count</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {props.rows.map((row, i) => (
+              {props.data ? props.data.countPerEvent.map((row, i) => (
                 <TableRow
                   key={i}
                   sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                 >
                   <TableCell component="th" scope="row">
-                    {row.actorType}
+                    {props.data!.actor}
                   </TableCell>
-                  <TableCell align="right">{row.eventType}</TableCell>
-                  <TableCell align="right">{row.timestamp}</TableCell>
+                  <TableCell align="right">{EventType[row.eventType]}</TableCell>
+                  <TableCell align="right">{row.count}</TableCell>
                 </TableRow>
-              ))}
+              )) : null}
             </TableBody>
           </Table>
         </TableContainer>

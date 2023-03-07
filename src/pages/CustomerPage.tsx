@@ -1,14 +1,20 @@
-import { Box, CircularProgress, Divider } from "@mui/material";
-import React, { useEffect, useRef, useState } from "react";
+import {
+    Box,
+    CircularProgress,
+    Divider,
+} from "@mui/material";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import CustomRangePicker from "../components/CustomRangePicker";
 import SearchButton from "../components/SearchButton";
 import StyledTextField from "../components/StyledTextField";
 import { IEventByCustomer } from "../api/models/IEventByCustomer";
 import { getEventsByCustomer, ParametersByCustomer } from "../api/ApiClient";
-import { handleInputChange } from "../utility";
+import { convertUTCDateToLocalDate, handleInputChange } from "../utility";
 import EventByCustomerTable from "../components/EventByCustomerTable";
 import { IPage } from "../api/models/IPage";
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
+import ErrorAlert from "../components/ErrorAlert";
+import { NavigationMenuContext } from "../App";
 
 type Props = {};
 
@@ -22,59 +28,99 @@ type formProps = {
 function CustomerPage(props: Props) {
     const [form, setForm] = useState<formProps>({} as formProps);
     const [pages, setPages] = useState<IPage<IEventByCustomer>[]>([]);
+    const [pageCount, setPageCount] = useState<number>(0);
     const [startDate, setStartDate] = useState<Date | null>(null);
     const [endDate, setEndDate] = useState<Date | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
-    const [customerFocused, setCustomerFocused] = useState<boolean>(false);
+    const [error, setError] = useState<string | null>(null);
     let { customerId } = useParams();
+    const [searchParams] = useSearchParams();
+    const menuContext = useContext(NavigationMenuContext);
 
-    const handleSearch = async () => {
+    const getData = async (
+        customerId: string,
+        eventType: string | null,
+        pagingState: string | undefined
+    ): Promise<IPage<IEventByCustomer> | null> => {
+        let page: IPage<IEventByCustomer> | null = null;
         setLoading(true);
-        const startDateStr = startDate?.toISOString().split("T")[0];
-        const endDateStr = endDate?.toISOString().split("T")[0];
+        const startDateStr = convertUTCDateToLocalDate(startDate)?.toISOString().split("T")[0];
+        const endDateStr = convertUTCDateToLocalDate(endDate)?.toISOString().split("T")[0];
         let params: ParametersByCustomer = {
             accountId: form.accountId,
             actor: form.actor,
-            eventType: form.eventType,
+            eventType: eventType || "",
             startDate: startDateStr,
             endDate: endDateStr,
-            pagingState: pages[pages.length-1]?.pagingState
+            pagingState: pagingState,
         };
+        try {
+            page = await getEventsByCustomer(customerId, params);
+        } catch (error: any) {
+            setError(error.message);
+        }
 
-        const page: IPage<IEventByCustomer> = await getEventsByCustomer(
-            form.customerId,
-            params
-        );
-        setPages((prev) => [...prev, page]);
-        console.log(pages)
         setLoading(false);
+        return page;
+    };
+
+    const handleSearch = async () => {
+        if (!form.customerId){
+            setError("You must specify customerId!")
+            return null;
+        }
+        setError(null)
+        getData(String(form.customerId), form.eventType, undefined)
+            .then((page: IPage<IEventByCustomer> | null) => {
+                if (page) {
+                    setPages([page]);
+                    setPageCount(page.pageCount);
+                }
+                console.log(pages);
+            })
     };
 
     useEffect(() => {
         console.log(`CustomerId: ${customerId}`);
+        console.log(`EventType: ${form.eventType}`);
         if (customerId) {
-            getEventsByCustomer(String(customerId), null).then((data: IPage<IEventByCustomer>) => {
-                setPages((prev) => [...prev, data]);
-                setForm((prev: any) => ({
-                    ...prev,
-                    customerId: customerId,
-                }));
-                setCustomerFocused(true)
-            });
+            menuContext.setTab(0);
+            getData(customerId, searchParams.get("eventType"), undefined).then(
+                (data: IPage<IEventByCustomer> | null) => {
+                    if (data) {
+                        setPages([data]);
+                        setPageCount(data.pageCount);
+                    }
+                    setForm((prev: any) => ({
+                        ...prev,
+                        customerId: customerId,
+                        eventType: searchParams.get("eventType")
+                    }));
+                }
+            );
         }
     }, []);
 
     const handlePrev = () => {
-        setPages((prev) => [...prev.slice(0, -1)])
-    }
+        setPages((prev) => [...prev.slice(0, -1)]);
+    };
 
-    const handleNext = () => {
-        handleSearch();
-    }
+    const handleNext = async () => {
+        getData(
+            String(form.customerId),
+            form.eventType,
+            pages[pages.length - 1].pagingState
+        ).then((data: IPage<IEventByCustomer> | null) => {
+            if (data) {
+                setPages((prev) => [...prev, data]);
+            }
+        });
+    };
 
     return (
         <Box>
             <Box display="flex" flexDirection="column" gap="30px">
+                <ErrorAlert error={error}></ErrorAlert>
                 <Box id="filter" display="flex" gap="20px">
                     <StyledTextField
                         name="customerId"
@@ -82,8 +128,7 @@ function CustomerPage(props: Props) {
                         label="customerId"
                         variant="filled"
                         onChange={(e) => handleInputChange(e, setForm)}
-                        // inputRef={customerRef}
-                        // focused={customerFocused}
+                        value={customerId}
                     />
                     <StyledTextField
                         name="accountId"
@@ -98,6 +143,7 @@ function CustomerPage(props: Props) {
                         label="eventType"
                         variant="filled"
                         onChange={(e) => handleInputChange(e, setForm)}
+                        value={searchParams.get("eventType")}
                     />
                     <StyledTextField
                         name="actor"
@@ -113,7 +159,13 @@ function CustomerPage(props: Props) {
                     <SearchButton onClick={handleSearch} />
                 </Box>
                 <Divider variant="middle" />
-                <EventByCustomerTable pages={pages} pageNumber={pages.length} onNext={handleNext} onPrev={handlePrev}></EventByCustomerTable>
+                <EventByCustomerTable
+                    pages={pages}
+                    pageNumber={pages.length}
+                    pageCount={pageCount}
+                    onNext={handleNext}
+                    onPrev={handlePrev}
+                ></EventByCustomerTable>
                 <CircularProgress
                     size="sm"
                     sx={{
